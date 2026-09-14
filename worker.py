@@ -17,6 +17,11 @@ from link import Link
 
 DELAYS = {"slow": 1.0, "fast": 0.2}
 
+HELP = [
+    "commands: /mode slow|fast, /pause, /resume, /quit, /help",
+    "(the leading / is optional -- 'pause' works same as '/pause')",
+]
+
 
 def run(name="demo"):
     state = {"mode": "slow", "paused": False, "count": 0}
@@ -26,9 +31,16 @@ def run(name="demo"):
         cmd = link.recv_nowait()
         if cmd is not None:
             print("got command: " + cmd)
-            words = cmd.strip().split()
+            # Every other command surface in this whole family (chatshell,
+            # programs) takes "/word ...", so this one should too, rather
+            # than being the one place that quietly only ever worked
+            # without a slash -- accept either, strip it if it's there.
+            words = cmd.strip().lstrip("/").split()
             if not words:
                 pass
+            elif words[0] in ("help", "?"):
+                for line in HELP:
+                    link.send(line)
             elif words[0] == "mode" and len(words) > 1 and words[1] in DELAYS:
                 state["mode"] = words[1]
             elif words[0] == "pause":
@@ -38,6 +50,8 @@ def run(name="demo"):
             elif words[0] == "quit":
                 link.send("bye")
                 break
+            else:
+                link.send("not understood: '%s' -- try /help" % words[0])
         if not state["paused"]:
             state["count"] += 1
         status = "count=%d mode=%s %s" % (

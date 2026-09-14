@@ -1,8 +1,8 @@
 #!/data/data/com.termux/files/usr/bin/python3
-"""Demo: type commands here (mode fast / mode slow / pause / resume /
-quit) and worker.py -- running in its OWN, separate Termux session --
-changes how it's running, live, and its status lines print right here
-as they arrive.
+"""Demo: type commands here (/mode fast, /mode slow, /pause, /resume,
+/quit, /help) and worker.py -- running in its OWN, separate Termux
+session -- changes how it's running, live, and its status lines print
+right here as they arrive.
 
     python3 controller.py                        # link to a worker started manually
     python3 controller.py /path/to/worker.py      # also opens that worker in a new session
@@ -21,16 +21,17 @@ def run(name="demo", worker_path=None):
         open_termux_session(worker_path, args=[name])
     link = Link(name, side="a", on_line=lambda line: print("worker says: " + line))
     print("controller linked as 'a' on '%s'" % name)
-    print("try: mode fast / mode slow / pause / resume / quit")
+    print("/mode fast, /mode slow, /pause, /resume, /quit, /help -- sent straight to the worker")
     while True:
         try:
             said = input("> ")
         except EOFError:
             break
-        if not said.strip():
+        word = said.strip().lstrip("/")
+        if not word:
             continue
-        link.send(said)
-        if said.strip() == "quit":
+        link.send(word)
+        if word == "quit":
             break
 
 
